@@ -77,6 +77,14 @@ async function getDatabase() {
   return client
 }
 
+async function getEnableLegacySettings() {
+  if (isProduction) {
+    return /true/i.test(await getParameter('enable_legacy_settings'))
+  } else {
+    return /true/i.test(process.env.ENABLE_LEGACY_SETTINGS)
+  }
+}
+
 async function getExposuresConfig() {
   if (isProduction) {
     const [
@@ -167,6 +175,7 @@ function runIfDev(fn) {
 module.exports = {
   getAssetsBucket,
   getDatabase,
+  getEnableLegacySettings,
   getExposuresConfig,
   getInteropConfig,
   getJwtSecret,

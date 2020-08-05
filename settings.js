@@ -3,7 +3,7 @@ const SQL = require('@nearform/sql')
 const crypto = require('crypto')
 const querystring = require('querystring')
 const { unflatten } = require('flat')
-const { getAssetsBucket, getDatabase, runIfDev } = require('./utils')
+const { getAssetsBucket, getDatabase, getEnableLegacySettings, runIfDev } = require('./utils')
 
 async function getSettingsBody(client) {
   const sql = SQL`SELECT is_language, settings_key, settings_value FROM settings`
@@ -69,7 +69,10 @@ exports.handler = async function () {
 
   await updateIfChanged(s3, bucket, 'exposures.json', exposures)
   await updateIfChanged(s3, bucket, 'language.json', language)
-  await updateIfChanged(s3, bucket, 'settings.json', { ...exposures, ...language })
+
+  if (await getEnableLegacySettings()) {
+    await updateIfChanged(s3, bucket, 'settings.json', { ...exposures, ...language })
+  }
 
   return { exposures, language }
 }
