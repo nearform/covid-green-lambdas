@@ -131,7 +131,13 @@ function createExportFile(privateKey, signatureInfoPayload, exposures, region, b
     const filteredKeys = keys.filter(({ keyData }) => {
       const decodedKeyData = Buffer.from(keyData, 'base64')
 
-      return decodedKeyData.length === 16
+      if (decodedKeyData.length !== 16) {
+        console.log(`excluding invalid key ${keyData}, length was ${decodedKeyData.length}`)
+
+        return false
+      }
+
+      return true
     })
 
     const tekExportPayload = {
