@@ -43,10 +43,10 @@ exports.handler = async function (event) {
 
   if (bucketName) {
     await s3.upload({
-      key: `${id}.pdf`,
-      body: await createPDFContent({ qrCode, name, location }),
-      bucket: bucketName,
-      contentType: 'application/pdf'
+      Key: `${id}.pdf`,
+      Body: await createPDFContent({ qrCode, name, location }),
+      Bucket: bucketName,
+      ContentType: 'application/pdf'
     })
   }
 }
