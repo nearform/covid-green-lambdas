@@ -236,6 +236,7 @@ function runIfDev(fn) {
 }
 
 module.exports = {
+  isProduction,
   getAssetsBucket,
   getDatabase,
   getExpiryConfig,
