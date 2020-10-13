@@ -3,39 +3,43 @@ const PDFDocument = require('pdfkit')
 const QRCode = require('qrcode')
 const { runIfDev } = require('./utils')
 
-async function createPDFContent({ qrCode, name, location }) {
-  const doc = new PDFDocument({ size: 'A4' })
+function createPDFContent({ qrCode, name, location }) {
+  return new Promise(resolve => {
+    const doc = new PDFDocument({ size: 'A4' })
+    const buffers = []
 
-  doc.image('./pdf-assets/header.png', 0, 0, { width: doc.page.width })
+    doc.on('data', data => buffers.push(data))
+    doc.on('end', () => resolve(Buffer.concat(buffers)))
 
-  doc
-    .font('Helvetica-Bold', 18)
-    .text(name, (doc.page.width - doc.page.width) / 2, 305, {
-      align: 'center',
-      width: doc.page.width
-    })
+    doc.image('./pdf-assets/header.png', 0, 0, { width: doc.page.width })
 
-  doc.image(qrCode, (doc.page.width - 400) / 2, 330, { width: 400 })
+    doc
+      .font('Helvetica-Bold', 18)
+      .text(name, (doc.page.width - doc.page.width) / 2, 305, {
+        align: 'center',
+        width: doc.page.width
+      })
 
-  doc
-    .font('Helvetica-Bold', 18)
-    .text(location, (doc.page.width - doc.page.width) / 2, 740, {
-      align: 'center',
-      width: doc.page.width
-    })
+    doc.image(qrCode, (doc.page.width - 400) / 2, 330, { width: 400 })
 
-  doc.image(
-    './pdf-assets/footer.png',
-    (doc.page.width - (doc.page.width - 50)) / 2,
-    doc.page.height - 75,
-    {
-      width: doc.page.width - 50
-    }
-  )
+    doc
+      .font('Helvetica-Bold', 18)
+      .text(location, (doc.page.width - doc.page.width) / 2, 740, {
+        align: 'center',
+        width: doc.page.width
+      })
 
-  doc.end()
+    doc.image(
+      './pdf-assets/footer.png',
+      (doc.page.width - (doc.page.width - 50)) / 2,
+      doc.page.height - 75,
+      {
+        width: doc.page.width - 50
+      }
+    )
 
-  return doc
+    doc.end()
+  })
 }
 
 exports.handler = async function (event) {
