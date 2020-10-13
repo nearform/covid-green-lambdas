@@ -33,6 +33,8 @@ async function createPDFContent({ qrCode, name, location }) {
     }
   )
 
+  doc.end()
+
   return doc
 }
 
