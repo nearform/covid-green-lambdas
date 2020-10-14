@@ -56,7 +56,7 @@ exports.handler = async function (event) {
     console.log(`generating poster ${id}`)
 
     const data = await createPDFContent({
-      qrCode: await QRCode.toDataURL(`NFCS:1:${token}`),
+      qrCode: await QRCode.toDataURL(`DEMOQRCODETRACINGAPP:1:${token}`),
       name,
       location
     })
