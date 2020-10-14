@@ -39,7 +39,7 @@ async function createPDFContent({ qrCode, name, location }) {
 exports.handler = async function(event) {
   const { bucketName, id, location, name, token } = event
   const s3 = new AWS.S3({ region: process.env.AWS_REGION })
-  const qrCode = await QRCode.toDataURL(token)
+  const qrCode = await QRCode.toDataURL(`DEMOQRCODETRACINGAPP:1:${token}`)
 
   if (bucketName) {
     await s3.upload({
