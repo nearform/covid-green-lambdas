@@ -45,8 +45,12 @@ function createPDFContent({ qrCode, name, location }) {
 exports.handler = async function (event) {
   const s3 = new AWS.S3({ region: process.env.AWS_REGION })
 
+  console.log(`processing ${event.Records.length} records`)
+
   for (const record of event.Records) {
     const { bucketName, id, location, name, token } = JSON.parse(record.body)
+
+    console.log(`generating poster ${id} and writing to ${bucketName}`)
 
     const object = {
       ACL: 'private',
@@ -61,6 +65,8 @@ exports.handler = async function (event) {
     }
 
     await s3.putObject(object).promise()
+
+    console.log(`file written successfully`)
   }
 
   return true
