@@ -1,6 +1,7 @@
 const AWS = require('aws-sdk')
 const PDFDocument = require('pdfkit')
 const QRCode = require('qrcode')
+const { createTransport } = require('nodemailer')
 const { runIfDev } = require('./utils')
 
 function createPDFContent({ qrCode, name, location }) {
@@ -44,21 +45,27 @@ function createPDFContent({ qrCode, name, location }) {
 
 exports.handler = async function (event) {
   const s3 = new AWS.S3({ region: process.env.AWS_REGION })
+  const ses = new AWS.SES({ region: process.env.AWS_REGION })
+  const transport = createTransport({ SES: ses })
 
   console.log(`processing ${event.Records.length} records`)
 
   for (const record of event.Records) {
-    const { bucketName, id, location, name, token } = JSON.parse(record.body)
+    const { bucketName, emailAddress, id, location, name, token } = JSON.parse(record.body)
 
-    console.log(`generating poster ${id} and writing to ${bucketName}`)
+    console.log(`generating poster ${id}`)
+
+    const data = await createPDFContent({
+      qrCode: await QRCode.toDataURL(`NFCS:1:${token}`),
+      name,
+      location
+    })
+
+    console.log(`writing to ${bucketName}`)
 
     const object = {
       ACL: 'private',
-      Body: await createPDFContent({
-        qrCode: await QRCode.toDataURL(`NFCS:1:${token}`, { margin: 0 }),
-        name,
-        location
-      }),
+      Body: data,
       Bucket: bucketName,
       ContentType: 'application/pdf',
       Key: `${id}.pdf`
@@ -66,7 +73,22 @@ exports.handler = async function (event) {
 
     await s3.putObject(object).promise()
 
-    console.log(`file written successfully`)
+    console.log(`sending email`)
+
+    await transport.sendMail({
+      from: 'nfcs-dev-no-reply@nf-covid-services.com',
+      subject: 'Your QR poster is attached',
+      text: 'Your QR posted is attached',
+      to: emailAddress,
+      attachments: [
+          {
+              filename: 'qr.pdf',
+              content: data
+          }
+      ]
+    })
+
+    console.log(`email sent`)
   }
 
   return true
