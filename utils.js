@@ -174,6 +174,17 @@ async function getInteropConfig() {
     return await getSecret('interop')
   } else {
     return {
+      efgs: {
+        url: process.env.EFGS_URL,
+        auth: {
+          cert: process.env.EFGS_AUTH_CERT,
+          key: process.env.EFGS_AUTH_KEY
+        },
+        sign: {
+          cert: process.env.EFGS_SIGN_CERT,
+          key: process.env.EFGS_SIGN_KEY
+        }
+      },
       servers: [
         {
           id: process.env.INTEROP_SERVER_ID,

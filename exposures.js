@@ -79,10 +79,11 @@ async function uploadFile(firstExposureId, client, s3, bucket, config) {
     }
 
     for (const region of regions) {
-      const resolvedRegion =
+      const resolvedRegion = defaultRegion
+      /*const resolvedRegion =
         nativeRegions.includes('*') || nativeRegions.includes(region)
           ? defaultRegion
-          : region
+          : region*/
 
       if (results[resolvedRegion] === undefined) {
         results[resolvedRegion] = []
