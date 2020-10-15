@@ -136,8 +136,24 @@ async function uploadToEfgs(client, config) {
 
   const firstExposureId = await getFirstExposureId(client, 'efgs')
   const exposures = await getExposures(client, firstExposureId)
+  const keysToUpload = []
+      
+  for (const { days_since_onset, key_data, rolling_period, rolling_start_number, transmission_risk_level } of exposures) {
+    if (differenceInDays(new Date(), new Date(rolling_start_number * 1000 * 600)) < 14) {
+      keysToUpload.push({
+        keyData: key_data,
+        rollingStartIntervalNumber: rolling_start_number,
+        rollingPeriod: rolling_period,
+        transmissionRiskLevel: transmission_risk_level,
+        visitedCountries: [],
+        origin: 'IE',
+        reportType: 'CONFIRMED_TEST',
+        days_since_onset_of_symptoms: Math.min(Math.max(days_since_onset, 0), 14)
+      })
+    }
+  }
 
-  if (exposures.length === 0) {
+  if (keysToUpload.length === 0) {
     console.log('no exposures to upload')
   } else {
     await client.query('BEGIN')
@@ -164,25 +180,8 @@ async function uploadToEfgs(client, config) {
         RECURSIVE: 4,
         REVOKED: 5
       }
-
-      const keys = []
-      
-      for (const { days_since_onset, key_data, rolling_period, rolling_start_number, transmission_risk_level } of exposures) {
-        if (differenceInDays(new Date(), new Date(rolling_start_number * 1000 * 600)) < 14) {
-          keys.push({
-            keyData: key_data,
-            rollingStartIntervalNumber: rolling_start_number,
-            rollingPeriod: rolling_period,
-            transmissionRiskLevel: transmission_risk_level,
-            visitedCountries: [],
-            origin: 'IE',
-            reportType: 'CONFIRMED_TEST',
-            days_since_onset_of_symptoms: Math.min(Math.max(days_since_onset, 0), 14)
-          })
-        }
-      }
     
-      const dataToSign = keys.map(({ keyData, rollingStartIntervalNumber, rollingPeriod, transmissionRiskLevel, visitedCountries, origin, reportType, days_since_onset_of_symptoms }) => {
+      const dataToSign = keysToUpload.map(({ keyData, rollingStartIntervalNumber, rollingPeriod, transmissionRiskLevel, visitedCountries, origin, reportType, days_since_onset_of_symptoms }) => {
         const rollingStartIntervalNumberBuffer = Buffer.alloc(4)
         const rollingPeriodBuffer = Buffer.alloc(4)
         const transmissionRiskLevelBuffer = Buffer.alloc(4)
@@ -256,7 +255,7 @@ async function uploadToEfgs(client, config) {
     
       await axios.post(
         `${url}/diagnosiskeys/upload`,
-        { keys },
+        { keys: keysToUpload },
         {
           headers: {
             'Content-Type': 'application/json; version=1.0',
@@ -270,7 +269,7 @@ async function uploadToEfgs(client, config) {
       await client.query('COMMIT')
 
       console.log(
-        `uploaded ${keys.length} to batch ${batchTag}`
+        `uploaded ${keysToUpload.length} to batch ${batchTag}`
       )
     } catch (err) {
       await client.query('ROLLBACK')
