@@ -284,7 +284,7 @@ exports.handler = async function() {
   const client = await getDatabase()
 
   for (const { id, privateKey, token, url } of servers) {
-    //await uploadToInterop(client, id, privateKey, token, url)
+    await uploadToInterop(client, id, privateKey, token, url)
   }
 
   await uploadToEfgs(client, efgs)
