@@ -1,6 +1,7 @@
 const axios = require('axios')
 const fetch = require('node-fetch')
 const https = require('https')
+const jsrsasign = require('jsrsasign')
 const SQL = require('@nearform/sql')
 const { JWK, JWS } = require('node-jose')
 const { differenceInDays } = require('date-fns')
