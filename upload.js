@@ -177,7 +177,7 @@ async function uploadToEfgs(client, config) {
             visitedCountries: [],
             origin: 'IE',
             reportType: 'CONFIRMED_TEST',
-            days_since_onset_of_symptoms: days_since_onset
+            days_since_onset_of_symptoms: Math.min(Math.max(days_since_onset, 0), 14)
           })
         }
       }
@@ -254,29 +254,23 @@ async function uploadToEfgs(client, config) {
         }]
       })
     
-      try {
-        await axios.post(
-          `${url}/diagnosiskeys/upload`,
-          { keys },
-          {
-            headers: {
-              'Content-Type': 'application/json; version=1.0',
-              batchTag,
-              batchSignature: Buffer.from(signed.getContentInfoEncodedHex(), 'hex').toString('base64')
-            },
-            httpsAgent
-          }
-        )
-    
-        console.log(`uploaded ${keys.length} keys`)
-      } catch (err) {
-        console.log(err)
-      }
-
+      await axios.post(
+        `${url}/diagnosiskeys/upload`,
+        { keys },
+        {
+          headers: {
+            'Content-Type': 'application/json; version=1.0',
+            batchTag,
+            batchSignature: Buffer.from(signed.getContentInfoEncodedHex(), 'hex').toString('base64')
+          },
+          httpsAgent
+        }
+      )
+  
       await client.query('COMMIT')
 
       console.log(
-        `uploaded ${exposures.length} to batch ${batchTag}`
+        `uploaded ${keys.length} to batch ${batchTag}`
       )
     } catch (err) {
       await client.query('ROLLBACK')
@@ -290,7 +284,7 @@ exports.handler = async function() {
   const client = await getDatabase()
 
   for (const { id, privateKey, token, url } of servers) {
-    await uploadToInterop(client, id, privateKey, token, url)
+    //await uploadToInterop(client, id, privateKey, token, url)
   }
 
   await uploadToEfgs(client, efgs)
