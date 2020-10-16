@@ -145,7 +145,7 @@ async function uploadToEfgs(client, config) {
         rollingStartIntervalNumber: rolling_start_number,
         rollingPeriod: rolling_period,
         transmissionRiskLevel: transmission_risk_level,
-        visitedCountries: [],
+        visitedCountries: ['AT', 'BE', 'BG', 'HR', 'CY', 'CZ', 'DK', 'EE', 'FI', 'FR', 'DE', 'GR', 'HU', 'IE', 'IT', 'LV', 'LT', 'LU', 'MT', 'NL', 'PL', 'PT', 'RO', 'SK', 'SI', 'ES', 'SE'],
         origin: 'IE',
         reportType: 'CONFIRMED_TEST',
         days_since_onset_of_symptoms: Math.min(Math.max(days_since_onset, 0), 14)
