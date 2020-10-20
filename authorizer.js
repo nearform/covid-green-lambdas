@@ -1,7 +1,8 @@
 const { isAuthorized, runIfDev } = require('./utils')
 
 exports.handler = async function(event) {
-  const secret = process.env.JWT_SECRET
+  /*const secret = process.env.JWT_SECRET
+
   if (!secret) {
     console.log('Error acquiring secret from env')
 
@@ -24,7 +25,7 @@ exports.handler = async function(event) {
 
     // eslint-disable-next-line no-throw-literal
     throw 'Unauthorized'
-  }
+  }*/
 
   return {
     principalId: event.authorizationToken,

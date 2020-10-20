@@ -176,6 +176,8 @@ async function getInteropConfig() {
     return {
       efgs: {
         url: process.env.EFGS_URL,
+        download: /true/i.test(process.env.EFGS_DOWNLOAD),
+        upload: /true/i.test(process.env.EFGS_UPLOAD),
         auth: {
           cert: process.env.EFGS_AUTH_CERT,
           key: process.env.EFGS_AUTH_KEY

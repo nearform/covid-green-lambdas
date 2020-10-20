@@ -323,7 +323,7 @@ exports.handler = async function() {
 
   date.setHours(0, 0, 0, 0)
 
-  for (let i = 0; i < 14; i++) {
+  for (let i = 0; i < 5; i++) {
     await uploadExposuresSince(client, s3, bucket, config, date)
     date.setDate(date.getDate() - 1)
   }

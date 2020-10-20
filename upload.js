@@ -129,7 +129,7 @@ async function uploadToInterop(client, id, privateKey, token, url) {
   }
 }
 
-async function uploadToEfgs(client, config) {  
+async function uploadToEfgs(client, config) {
   const { auth, sign, url } = config
 
   console.log(`beginning upload to ${url}`)
@@ -137,7 +137,7 @@ async function uploadToEfgs(client, config) {
   const firstExposureId = await getFirstExposureId(client, 'efgs')
   const exposures = await getExposures(client, firstExposureId)
   const keysToUpload = []
-      
+
   for (const { days_since_onset, key_data, rolling_period, rolling_start_number, transmission_risk_level } of exposures) {
     if (differenceInDays(new Date(), new Date(rolling_start_number * 1000 * 600)) < 14) {
       keysToUpload.push({
@@ -172,7 +172,7 @@ async function uploadToEfgs(client, config) {
         cert: Buffer.from(auth.cert, 'utf-8'),
         key: Buffer.from(auth.key, 'utf-8')
       })
-    
+
       const reportTypes = {
         CONFIRMED_TEST: 1,
         CONFIRMED_CLINICAL_DIAGNOSIS: 2,
@@ -180,64 +180,64 @@ async function uploadToEfgs(client, config) {
         RECURSIVE: 4,
         REVOKED: 5
       }
-    
+
       const dataToSign = keysToUpload.map(({ keyData, rollingStartIntervalNumber, rollingPeriod, transmissionRiskLevel, visitedCountries, origin, reportType, days_since_onset_of_symptoms }) => {
         const rollingStartIntervalNumberBuffer = Buffer.alloc(4)
         const rollingPeriodBuffer = Buffer.alloc(4)
         const transmissionRiskLevelBuffer = Buffer.alloc(4)
         const reportTypeBuffer = Buffer.alloc(4)
         const daysSinceOnsetOfSymptomsBuffer = Buffer.alloc(4)
-    
+
         let data = ''
-    
+
         rollingStartIntervalNumberBuffer.writeUInt32BE(rollingStartIntervalNumber)
         rollingPeriodBuffer.writeUInt32BE(rollingPeriod)
         transmissionRiskLevelBuffer.writeInt32BE(transmissionRiskLevel)
         reportTypeBuffer.writeInt32BE(reportTypes[reportType] || 0)
         daysSinceOnsetOfSymptomsBuffer.writeUInt32BE(days_since_onset_of_symptoms)
-    
+
         data += keyData
         data += '.'
-    
+
         data += rollingStartIntervalNumberBuffer.toString('base64')
         data += '.'
-    
+
         data += rollingPeriodBuffer.toString('base64')
         data += '.'
-    
+
         data += transmissionRiskLevelBuffer.toString('base64')
         data += '.'
-    
+
         data += Buffer.from(visitedCountries.join(','), 'utf-8').toString('base64')
         data += '.'
-    
+
         data += Buffer.from(origin, 'utf-8').toString('base64')
         data += '.'
-    
+
         data += reportTypeBuffer.toString('base64')
         data += '.'
-    
+
         data += daysSinceOnsetOfSymptomsBuffer.toString('base64')
         data += '.'
-    
+
         return data
       })
-    
+
       const sortedDataToSign = dataToSign.sort((a, b) => {
         const encodedA = Buffer.from(a, 'utf-8').toString('base64')
         const encodedB = Buffer.from(b, 'utf-8').toString('base64')
-    
+
         if (encodedA < encodedB) {
           return -1
         }
-    
+
         if (encodedA > encodedB) {
           return 1
         }
-    
+
         return 0
       })
-    
+
       const signed = jsrsasign.KJUR.asn1.cms.CMSUtil.newSignedData({
         content: { hex: Buffer.from(sortedDataToSign.join(''), 'utf-8').toString('hex') },
         certs: [sign.cert],
@@ -252,7 +252,7 @@ async function uploadToEfgs(client, config) {
           signerPrvKey: sign.key
         }]
       })
-    
+
       await axios.post(
         `${url}/diagnosiskeys/upload`,
         { keys: keysToUpload },
@@ -265,7 +265,7 @@ async function uploadToEfgs(client, config) {
           httpsAgent
         }
       )
-  
+
       await client.query('COMMIT')
 
       console.log(
@@ -278,7 +278,7 @@ async function uploadToEfgs(client, config) {
   }
 }
 
-exports.handler = async function() {
+exports.handler = async function () {
   const { efgs, servers } = await getInteropConfig()
   const client = await getDatabase()
 
@@ -286,7 +286,9 @@ exports.handler = async function() {
     await uploadToInterop(client, id, privateKey, token, url)
   }
 
-  await uploadToEfgs(client, efgs)
+  if (efgs && efgs.upload) {
+    await uploadToEfgs(client, efgs)
+  }
 }
 
 runIfDev(exports.handler)

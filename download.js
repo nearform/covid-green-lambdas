@@ -138,7 +138,7 @@ async function downloadFromInterop(client, id, maxAge, token, url) {
   } while (more)
 }
 
-async function downloadFromEfgs(client, config) {  
+async function downloadFromEfgs(client, config) {
   const { auth, url } = config
 
   console.log(`beginning download from ${url}`)
@@ -212,7 +212,9 @@ exports.handler = async function() {
     await downloadFromInterop(client, id, maxAge, token, url)
   }
 
-  await downloadFromEfgs(client, efgs)
+  if (efgs && efgs.download) {
+    await downloadFromEfgs(client, efgs)
+  }
 }
 
 runIfDev(exports.handler)
