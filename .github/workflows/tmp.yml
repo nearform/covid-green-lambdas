@@ -99,104 +99,91 @@ jobs:
         function_name: qa-fight-together-upload
         zip_file: lambdas.zip
 
-  # deploy-cti-prod:
-  #   name: Deploy to CTI Prod
-  #   runs-on: ubuntu-latest
-
-  #   steps:
-  #   - name: Checkout
-  #     uses: actions/checkout@v2
-
-  #   - name: Setup node
-  #     uses: actions/setup-node@v1
-  #     with:
-  #       node-version: '12.13.1'
-
-  #   - name: Install app dependencies
-  #     run: npm install
-
-  #   - name: Package lambdas
-  #     run: |
-  #       npm run artifact:create
-  #     env:
-  #       ORG: managed
-  #       BUILD: 0.0.1
-
-  #   - name: Deploy authorizer
-  #     uses: appleboy/lambda-action@master
-  #     with:
-  #       aws_access_key_id: ${{ secrets.CTI_PROD_KEY }}
-  #       aws_secret_access_key: ${{ secrets.CTI_PROD_SECRET }}
-  #       aws_region: eu-west-1
-  #       function_name: prod-cti-authorizer
-  #       zip_file: lambdas.zip
-
-  #   - name: Update authorizer alias
-  #     env:
-  #       AWS_ACCESS_KEY_ID: ${{ secrets.CTI_PROD_KEY }}
-  #       AWS_SECRET_ACCESS_KEY: ${{ secrets.CTI_PROD_SECRET }}
-  #       AWS_REGION: eu-west-1
-  #     run: ./scripts/update-lambda-alias.sh "prod-cti-authorizer" "-live"
-
-  #   - name: Deploy cleanup
-  #     uses: appleboy/lambda-action@master
-  #     with:
-  #       aws_access_key_id: ${{ secrets.CTI_PROD_KEY }}
-  #       aws_secret_access_key: ${{ secrets.CTI_PROD_SECRET }}
-  #       aws_region: eu-west-1
-  #       function_name: prod-cti-cleanup
-  #       zip_file: lambdas.zip
-
-  #   - name: Deploy download
-  #     uses: appleboy/lambda-action@master
-  #     with:
-  #       aws_access_key_id: ${{ secrets.CTI_PROD_KEY }}
-  #       aws_secret_access_key: ${{ secrets.CTI_PROD_SECRET }}
-  #       aws_region: eu-west-1
-  #       function_name: prod-cti-download
-  #       zip_file: lambdas.zip
-
-  #   - name: Deploy exposures
-  #     uses: appleboy/lambda-action@master
-  #     with:
-  #       aws_access_key_id: ${{ secrets.CTI_PROD_KEY }}
-  #       aws_secret_access_key: ${{ secrets.CTI_PROD_SECRET }}
-  #       aws_region: eu-west-1
-  #       function_name: prod-cti-exposures
-  #       zip_file: lambdas.zip
-
-  #   - name: Deploy settings
-  #     uses: appleboy/lambda-action@master
-  #     with:
-  #       aws_access_key_id: ${{ secrets.CTI_PROD_KEY }}
-  #       aws_secret_access_key: ${{ secrets.CTI_PROD_SECRET }}
-  #       aws_region: eu-west-1
-  #       function_name: prod-cti-settings
-  #       zip_file: lambdas.zip
-
-  #   - name: Deploy upload
-  #     uses: appleboy/lambda-action@master
-  #     with:
-  #       aws_access_key_id: ${{ secrets.CTI_PROD_KEY }}
-  #       aws_secret_access_key: ${{ secrets.CTI_PROD_SECRET }}
-  #       aws_region: eu-west-1
-  #       function_name: prod-cti-upload
-  #       zip_file: lambdas.zip
-
-  #   - name: Deploy token
-  #     uses: appleboy/lambda-action@master
-  #     with:
-  #       aws_access_key_id: ${{ secrets.CTI_PROD_KEY }}
-  #       aws_secret_access_key: ${{ secrets.CTI_PROD_SECRET }}
-  #       aws_region: eu-west-1
-  #       function_name: prod-cti-token
-  #       zip_file: lambdas.zip
-
-  #   - name: Create deployment annotation in dashboard
-  #     env:
-  #       AWS_ACCESS_KEY_ID: ${{ secrets.CTI_PROD_KEY }}
-  #       AWS_SECRET_ACCESS_KEY: ${{ secrets.CTI_PROD_SECRET }}
-  #       AWS_REGION: eu-west-1
-  #     run: |
-  #       npm i --g aws-cloudwatch-annotations
-  #       aws-cw-annotate prod-cti --title 'Deployment lambda.${{ github.sha }}'
+   deploy-cti-prod:
+     name: Deploy to CTI Prod
+     runs-on: ubuntu-latest
+     steps:
+     - name: Checkout
+       uses: actions/checkout@v2
+     - name: Setup node
+       uses: actions/setup-node@v1
+       with:
+         node-version: '12.13.1'
+     - name: Install app dependencies
+       run: npm install
+     - name: Package lambdas
+       run: |
+         npm run artifact:create
+       env:
+         ORG: managed
+         BUILD: 0.0.1
+     - name: Deploy authorizer
+       uses: appleboy/lambda-action@master
+       with:
+         aws_access_key_id: ${{ secrets.CTI_PROD_KEY }}
+         aws_secret_access_key: ${{ secrets.CTI_PROD_SECRET }}
+         aws_region: eu-west-1
+         function_name: prod-cti-authorizer
+         zip_file: lambdas.zip
+     - name: Update authorizer alias
+       env:
+         AWS_ACCESS_KEY_ID: ${{ secrets.CTI_PROD_KEY }}
+         AWS_SECRET_ACCESS_KEY: ${{ secrets.CTI_PROD_SECRET }}
+         AWS_REGION: eu-west-1
+       run: ./scripts/update-lambda-alias.sh "prod-cti-authorizer" "-live"
+     - name: Deploy cleanup
+       uses: appleboy/lambda-action@master
+       with:
+         aws_access_key_id: ${{ secrets.CTI_PROD_KEY }}
+         aws_secret_access_key: ${{ secrets.CTI_PROD_SECRET }}
+         aws_region: eu-west-1
+         function_name: prod-cti-cleanup
+         zip_file: lambdas.zip
+     - name: Deploy download
+       uses: appleboy/lambda-action@master
+       with:
+         aws_access_key_id: ${{ secrets.CTI_PROD_KEY }}
+         aws_secret_access_key: ${{ secrets.CTI_PROD_SECRET }}
+         aws_region: eu-west-1
+         function_name: prod-cti-download
+         zip_file: lambdas.zip
+     - name: Deploy exposures
+       uses: appleboy/lambda-action@master
+       with:
+         aws_access_key_id: ${{ secrets.CTI_PROD_KEY }}
+         aws_secret_access_key: ${{ secrets.CTI_PROD_SECRET }}
+         aws_region: eu-west-1
+         function_name: prod-cti-exposures
+         zip_file: lambdas.zip
+     - name: Deploy settings
+       uses: appleboy/lambda-action@master
+       with:
+         aws_access_key_id: ${{ secrets.CTI_PROD_KEY }}
+         aws_secret_access_key: ${{ secrets.CTI_PROD_SECRET }}
+         aws_region: eu-west-1
+         function_name: prod-cti-settings
+         zip_file: lambdas.zip
+     - name: Deploy upload
+       uses: appleboy/lambda-action@master
+       with:
+         aws_access_key_id: ${{ secrets.CTI_PROD_KEY }}
+         aws_secret_access_key: ${{ secrets.CTI_PROD_SECRET }}
+         aws_region: eu-west-1
+         function_name: prod-cti-upload
+         zip_file: lambdas.zip
+     - name: Deploy token
+       uses: appleboy/lambda-action@master
+       with:
+         aws_access_key_id: ${{ secrets.CTI_PROD_KEY }}
+         aws_secret_access_key: ${{ secrets.CTI_PROD_SECRET }}
+         aws_region: eu-west-1
+         function_name: prod-cti-token
+         zip_file: lambdas.zip
+     - name: Create deployment annotation in dashboard
+       env:
+         AWS_ACCESS_KEY_ID: ${{ secrets.CTI_PROD_KEY }}
+         AWS_SECRET_ACCESS_KEY: ${{ secrets.CTI_PROD_SECRET }}
+         AWS_REGION: eu-west-1
+       run: |
+         npm i --g aws-cloudwatch-annotations
+         aws-cw-annotate prod-cti --title 'Deployment lambda.${{ github.sha }}'
