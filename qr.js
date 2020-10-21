@@ -43,7 +43,7 @@ function createPDFContent({ qrCode, name, location }) {
   })
 }
 
-exports.handler = async function (event) {
+exports.handler = async function(event) {
   const s3 = new AWS.S3({ region: process.env.AWS_REGION })
   const ses = new AWS.SES({ region: process.env.AWS_REGION })
   const transport = createTransport({ SES: ses })
@@ -51,12 +51,16 @@ exports.handler = async function (event) {
   console.log(`processing ${event.Records.length} records`)
 
   for (const record of event.Records) {
-    const { bucketName, emailAddress, id, location, name, token } = JSON.parse(record.body)
+    const { bucketName, emailAddress, id, location, name, token } = JSON.parse(
+      record.body
+    )
 
     console.log(`generating poster ${id}`)
 
     const data = await createPDFContent({
-      qrCode: await QRCode.toDataURL(`DEMOQRCODETRACINGAPP:1:${token}`),
+      qrCode: await QRCode.toDataURL(
+        `https://pg-qr-demo.nf-covid-services.com/scan?content=${token}`
+      ),
       name,
       location
     })
@@ -81,10 +85,10 @@ exports.handler = async function (event) {
       text: 'Your QR posted is attached',
       to: emailAddress,
       attachments: [
-          {
-              filename: 'qr.pdf',
-              content: data
-          }
+        {
+          filename: 'qr.pdf',
+          content: data
+        }
       ]
     })
 
