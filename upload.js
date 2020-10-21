@@ -137,6 +137,7 @@ async function uploadToEfgs(client, config) {
   const firstExposureId = await getFirstExposureId(client, 'efgs')
   const exposures = await getExposures(client, firstExposureId)
   const keysToUpload = []
+  const batchSize = 10
 
   for (const { days_since_onset, key_data, rolling_period, rolling_start_number, transmission_risk_level } of exposures) {
     if (differenceInDays(new Date(), new Date(rolling_start_number * 1000 * 600)) < 14) {
@@ -156,128 +157,131 @@ async function uploadToEfgs(client, config) {
   if (keysToUpload.length === 0) {
     console.log('no exposures to upload')
   } else {
-    await client.query('BEGIN')
+    for (let batchNumber = 0; batchNumber < Math.ceil(keysToUpload.length / batchSize); batchNumber++) {
+      await client.query('BEGIN')
 
-    try {
-      const lastExposureId = exposures[exposures.length - 1].id
+      try {
+        const batchToUpload = keysToUpload.slice(batchNumber * batchSize, (batchNumber * batchSize) + batchSize)
+        const lastExposureId = batchToUpload[batchToUpload.length - 1].id
 
-      const batchTag = await createBatch(
-        client,
-        exposures.length,
-        lastExposureId,
-        'efgs'
-      )
+        const batchTag = await createBatch(
+          client,
+          batchToUpload.length,
+          lastExposureId,
+          'efgs'
+        )
 
-      const httpsAgent = new https.Agent({
-        cert: Buffer.from(auth.cert, 'utf-8'),
-        key: Buffer.from(auth.key, 'utf-8')
-      })
+        const httpsAgent = new https.Agent({
+          cert: Buffer.from(auth.cert, 'utf-8'),
+          key: Buffer.from(auth.key, 'utf-8')
+        })
 
-      const reportTypes = {
-        CONFIRMED_TEST: 1,
-        CONFIRMED_CLINICAL_DIAGNOSIS: 2,
-        SELF_REPORT: 3,
-        RECURSIVE: 4,
-        REVOKED: 5
+        const reportTypes = {
+          CONFIRMED_TEST: 1,
+          CONFIRMED_CLINICAL_DIAGNOSIS: 2,
+          SELF_REPORT: 3,
+          RECURSIVE: 4,
+          REVOKED: 5
+        }
+
+        const dataToSign = batchToUpload.map(({ keyData, rollingStartIntervalNumber, rollingPeriod, transmissionRiskLevel, visitedCountries, origin, reportType, days_since_onset_of_symptoms }) => {
+          const rollingStartIntervalNumberBuffer = Buffer.alloc(4)
+          const rollingPeriodBuffer = Buffer.alloc(4)
+          const transmissionRiskLevelBuffer = Buffer.alloc(4)
+          const reportTypeBuffer = Buffer.alloc(4)
+          const daysSinceOnsetOfSymptomsBuffer = Buffer.alloc(4)
+
+          let data = ''
+
+          rollingStartIntervalNumberBuffer.writeUInt32BE(rollingStartIntervalNumber)
+          rollingPeriodBuffer.writeUInt32BE(rollingPeriod)
+          transmissionRiskLevelBuffer.writeInt32BE(transmissionRiskLevel)
+          reportTypeBuffer.writeInt32BE(reportTypes[reportType] || 0)
+          daysSinceOnsetOfSymptomsBuffer.writeUInt32BE(days_since_onset_of_symptoms)
+
+          data += keyData
+          data += '.'
+
+          data += rollingStartIntervalNumberBuffer.toString('base64')
+          data += '.'
+
+          data += rollingPeriodBuffer.toString('base64')
+          data += '.'
+
+          data += transmissionRiskLevelBuffer.toString('base64')
+          data += '.'
+
+          data += Buffer.from(visitedCountries.join(','), 'utf-8').toString('base64')
+          data += '.'
+
+          data += Buffer.from(origin, 'utf-8').toString('base64')
+          data += '.'
+
+          data += reportTypeBuffer.toString('base64')
+          data += '.'
+
+          data += daysSinceOnsetOfSymptomsBuffer.toString('base64')
+          data += '.'
+
+          return data
+        })
+
+        const sortedDataToSign = dataToSign.sort((a, b) => {
+          const encodedA = Buffer.from(a, 'utf-8').toString('base64')
+          const encodedB = Buffer.from(b, 'utf-8').toString('base64')
+
+          if (encodedA < encodedB) {
+            return -1
+          }
+
+          if (encodedA > encodedB) {
+            return 1
+          }
+
+          return 0
+        })
+
+        const signed = jsrsasign.KJUR.asn1.cms.CMSUtil.newSignedData({
+          content: { hex: Buffer.from(sortedDataToSign.join(''), 'utf-8').toString('hex') },
+          certs: [sign.cert],
+          detached: false,
+          signerInfos: [{
+            hashAlg: 'sha256',
+            sAttr: {
+              SigningTime: {}
+            },
+            signerCert: sign.cert,
+            sigAlg: 'SHA1withRSA',
+            signerPrvKey: sign.key
+          }]
+        })
+
+        await axios.post(
+          `${url}/diagnosiskeys/upload`,
+          { keys: batchToUpload },
+          {
+            headers: {
+              'Content-Type': 'application/json; version=1.0',
+              batchTag,
+              batchSignature: Buffer.from(signed.getContentInfoEncodedHex(), 'hex').toString('base64')
+            },
+            httpsAgent
+          }
+        )
+
+        await client.query('COMMIT')
+
+        console.log(
+          `uploaded ${batchToUpload.length} to batch ${batchTag}`
+        )
+      } catch (err) {
+        if (err.response && err.response.data) {
+          console.log(err.response.data)
+        }
+
+        await client.query('ROLLBACK')
+        throw err
       }
-
-      const dataToSign = keysToUpload.map(({ keyData, rollingStartIntervalNumber, rollingPeriod, transmissionRiskLevel, visitedCountries, origin, reportType, days_since_onset_of_symptoms }) => {
-        const rollingStartIntervalNumberBuffer = Buffer.alloc(4)
-        const rollingPeriodBuffer = Buffer.alloc(4)
-        const transmissionRiskLevelBuffer = Buffer.alloc(4)
-        const reportTypeBuffer = Buffer.alloc(4)
-        const daysSinceOnsetOfSymptomsBuffer = Buffer.alloc(4)
-
-        let data = ''
-
-        rollingStartIntervalNumberBuffer.writeUInt32BE(rollingStartIntervalNumber)
-        rollingPeriodBuffer.writeUInt32BE(rollingPeriod)
-        transmissionRiskLevelBuffer.writeInt32BE(transmissionRiskLevel)
-        reportTypeBuffer.writeInt32BE(reportTypes[reportType] || 0)
-        daysSinceOnsetOfSymptomsBuffer.writeUInt32BE(days_since_onset_of_symptoms)
-
-        data += keyData
-        data += '.'
-
-        data += rollingStartIntervalNumberBuffer.toString('base64')
-        data += '.'
-
-        data += rollingPeriodBuffer.toString('base64')
-        data += '.'
-
-        data += transmissionRiskLevelBuffer.toString('base64')
-        data += '.'
-
-        data += Buffer.from(visitedCountries.join(','), 'utf-8').toString('base64')
-        data += '.'
-
-        data += Buffer.from(origin, 'utf-8').toString('base64')
-        data += '.'
-
-        data += reportTypeBuffer.toString('base64')
-        data += '.'
-
-        data += daysSinceOnsetOfSymptomsBuffer.toString('base64')
-        data += '.'
-
-        return data
-      })
-
-      const sortedDataToSign = dataToSign.sort((a, b) => {
-        const encodedA = Buffer.from(a, 'utf-8').toString('base64')
-        const encodedB = Buffer.from(b, 'utf-8').toString('base64')
-
-        if (encodedA < encodedB) {
-          return -1
-        }
-
-        if (encodedA > encodedB) {
-          return 1
-        }
-
-        return 0
-      })
-
-      const signed = jsrsasign.KJUR.asn1.cms.CMSUtil.newSignedData({
-        content: { hex: Buffer.from(sortedDataToSign.join(''), 'utf-8').toString('hex') },
-        certs: [sign.cert],
-        detached: false,
-        signerInfos: [{
-          hashAlg: 'sha256',
-          sAttr: {
-            SigningTime: {}
-          },
-          signerCert: sign.cert,
-          sigAlg: 'SHA1withRSA',
-          signerPrvKey: sign.key
-        }]
-      })
-
-      await axios.post(
-        `${url}/diagnosiskeys/upload`,
-        { keys: keysToUpload },
-        {
-          headers: {
-            'Content-Type': 'application/json; version=1.0',
-            batchTag,
-            batchSignature: Buffer.from(signed.getContentInfoEncodedHex(), 'hex').toString('base64')
-          },
-          httpsAgent
-        }
-      )
-
-      await client.query('COMMIT')
-
-      console.log(
-        `uploaded ${keysToUpload.length} to batch ${batchTag}`
-      )
-    } catch (err) {
-      if (err.response && err.response.data) {
-        console.log(err.response.data)
-      }
-
-      await client.query('ROLLBACK')
-      throw err
     }
   }
 }
