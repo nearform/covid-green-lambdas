@@ -272,6 +272,10 @@ async function uploadToEfgs(client, config) {
         `uploaded ${keysToUpload.length} to batch ${batchTag}`
       )
     } catch (err) {
+      if (err.response && err.response.data) {
+        console.log(err.response.data)
+      }
+
       await client.query('ROLLBACK')
       throw err
     }
