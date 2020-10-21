@@ -245,7 +245,7 @@ async function uploadToEfgs(client, config) {
         const signed = jsrsasign.KJUR.asn1.cms.CMSUtil.newSignedData({
           content: { hex: Buffer.from(sortedDataToSign.join(''), 'utf-8').toString('hex') },
           certs: [sign.cert],
-          detached: false,
+          detached: true,
           signerInfos: [{
             hashAlg: 'sha256',
             sAttr: {
