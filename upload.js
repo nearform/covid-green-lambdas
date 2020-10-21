@@ -139,9 +139,10 @@ async function uploadToEfgs(client, config) {
   const keysToUpload = []
   const batchSize = 10
 
-  for (const { days_since_onset, key_data, rolling_period, rolling_start_number, transmission_risk_level } of exposures) {
+  for (const { days_since_onset, id, key_data, rolling_period, rolling_start_number, transmission_risk_level } of exposures) {
     if (differenceInDays(new Date(), new Date(rolling_start_number * 1000 * 600)) < 14) {
       keysToUpload.push({
+        id,
         keyData: key_data,
         rollingStartIntervalNumber: rolling_start_number,
         rollingPeriod: rolling_period,
@@ -258,7 +259,18 @@ async function uploadToEfgs(client, config) {
 
         await axios.post(
           `${url}/diagnosiskeys/upload`,
-          { keys: batchToUpload },
+          {
+            keys: batchToUpload.map(({ keyData, rollingStartIntervalNumber, rollingPeriod, transmissionRiskLevel, visitedCountries, origin, reportType, days_since_onset_of_symptoms }) => ({
+              keyData,
+              rollingStartIntervalNumber,
+              rollingPeriod,
+              transmissionRiskLevel,
+              visitedCountries,
+              origin,
+              reportType,
+              days_since_onset_of_symptoms
+            }))
+          },
           {
             headers: {
               'Content-Type': 'application/json; version=1.0',
