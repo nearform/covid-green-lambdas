@@ -162,44 +162,53 @@ async function downloadFromEfgs(client, config) {
       headers.batchTag = batchTag
     }
 
-    const result = await axios.get(
-      `${url}/diagnosiskeys/download/${date}`,
-      {
-        headers,
-        httpsAgent
-      }
-    )
-
-    if (result.data.keys) {
-      const keys = []
-
-      for (const { keyData, rollingStartIntervalNumber, rollingPeriod, transmissionRiskLevel, origin, reportType, days_since_onset_of_symptoms } of result.data.keys) {
-        if (reportType === 'CONFIRMED_TEST' && Buffer.from(keyData, 'base64').length === 16) {
-          keys.push({
-            keyData,
-            rollingPeriod,
-            rollingStartNumber: rollingStartIntervalNumber,
-            transmissionRiskLevel,
-            regions: [origin],
-            origin,
-            daysSinceOnset: days_since_onset_of_symptoms
-          })
+    try {
+      const result = await axios.get(
+        `${url}/diagnosiskeys/download/${date}`,
+        {
+          headers,
+          httpsAgent
         }
+      )
+
+      if (result.data.keys) {
+        const keys = []
+
+        for (const { keyData, rollingStartIntervalNumber, rollingPeriod, transmissionRiskLevel, origin, reportType, days_since_onset_of_symptoms } of result.data.keys) {
+          if (reportType === 'CONFIRMED_TEST' && Buffer.from(keyData, 'base64').length === 16) {
+            keys.push({
+              keyData,
+              rollingPeriod,
+              rollingStartNumber: rollingStartIntervalNumber,
+              transmissionRiskLevel,
+              regions: [origin],
+              origin,
+              daysSinceOnset: days_since_onset_of_symptoms
+            })
+          }
+        }
+
+        if (keys.length > 0) {
+          await insertExposures(client, keys)
+        }
+
+        console.log(`inserted ${keys.length} keys from batch ${batchTag}`)
+      } else {
+        console.log(`batch ${batchTag} contained no keys, skipping`)
       }
 
-      if (keys.length > 0) {
-        await insertExposures(client, keys)
+      if (result.headers.nextbatchtag && result.headers.nextbatchtag !== 'null') {
+        batchTag = result.headers.nextbatchtag
+      } else {
+        more = false
       }
-
-      console.log(`inserted ${keys.length} keys from batch ${batchTag}`)
-    } else {
-      console.log(`batch ${batchTag} contained no keys, skipping`)
-    }
-
-    if (result.headers.nextbatchtag && result.headers.nextbatchtag !== 'null') {
-      batchTag = result.headers.nextbatchtag
-    } else {
-      more = false
+    } catch (err) {
+      if (err.response && err.response.status && err.response.status === 404) {
+        console.log(`no batches found to download`)
+        more = false
+      } else {
+        throw err
+      }
     }
   }
 }
