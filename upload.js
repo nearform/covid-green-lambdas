@@ -52,7 +52,7 @@ async function getExposures(client, since) {
 }
 
 async function uploadToInterop(client, id, privateKey, token, url) {
-  console.log(`beginning upload to ${id}`)
+  console.log(`beginning upload to ${url}`)
 
   const firstExposureId = await getFirstExposureId(client, id)
   const exposures = await getExposures(client, firstExposureId)

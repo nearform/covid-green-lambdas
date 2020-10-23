@@ -83,7 +83,7 @@ async function insertExposures(client, exposures) {
 async function downloadFromInterop(client, id, maxAge, token, url) {
   const date = new Date()
 
-  console.log(`beginning download from ${id}`)
+  console.log(`beginning download from ${url}`)
 
   let more = true
   let batchTag = await getFirstBatchTag(client, id)
