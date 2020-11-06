@@ -47,12 +47,18 @@ async function removeOldNoticesKeys(client, noticeLifetime) {
 
   const { rowCount } = await client.query(sql)
 
-  console.log(`deleted ${rowCount} notices keys older than ${noticeLifetime} minutes`)
+  console.log(
+    `deleted ${rowCount} notices keys older than ${noticeLifetime} minutes`
+  )
 }
 
 exports.handler = async function() {
   const client = await getDatabase()
-  const { codeLifetime, tokenLifetime, noticeLifetime } = await getExpiryConfig()
+  const {
+    codeLifetime,
+    tokenLifetime,
+    noticeLifetime
+  } = await getExpiryConfig()
 
   await createRegistrationMetrics(client)
   await removeExpiredCodes(client, codeLifetime)
