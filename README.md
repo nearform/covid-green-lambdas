@@ -19,6 +19,7 @@ There are a number of handy commands you can run to help with development.
 | `npm run test:token:push` | Run test for token specific to push |
 | `npm run test:token:register` | Run test for token specific to register |
 | `npm run test:token:notices` | Run test for token specific to notices |
+| `npm run test:cleanup` | Run cleanup for local env |
 | `npm run lint` | Run eslint |
 | `npm run lint:fix` | Run eslint in fix mode |
 
