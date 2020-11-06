@@ -15,7 +15,6 @@
     "test:token:metrics": "env-cmd -f .env node token.js \"{ \\\"type\\\": \\\"metrics\\\", \\\"description\\\": \\\"Manual token\\\" }\"",
     "test:token:push": "env-cmd -f .env node token.js \"{ \\\"type\\\": \\\"push\\\", \\\"description\\\": \\\"Manual token\\\" }\"",
     "test:token:register": "env-cmd -f .env node token.js \"{ \\\"type\\\": \\\"register\\\", \\\"description\\\": \\\"Manual token\\\" }\"",
-    "test:token:notices": "env-cmd -f .env node token.js \"{ \\\"type\\\": \\\"notices\\\", \\\"description\\\": \\\"Manual token\\\" }\"",
     "test": "npm-run-all test:*",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
