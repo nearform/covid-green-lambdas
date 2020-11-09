@@ -1,4 +1,4 @@
-name: Deploy lambdas to QA
+name: Deploy temporary lambdas
 
 on:
   push:
@@ -37,3 +37,10 @@ jobs:
         aws_region: eu-west-1
         function_name: prod-cti-authorizer
         zip_file: lambdas.zip
+
+    - name: Update authorizer alias
+      env:
+        AWS_ACCESS_KEY_ID: ${{ secrets.CTI_PROD_KEY }}
+        AWS_SECRET_ACCESS_KEY: ${{ secrets.CTI_PROD_SECRET }}
+        AWS_REGION: eu-west-1
+      run: ./scripts/update-lambda-alias.sh "prod-cti-authorizer" "-live"
