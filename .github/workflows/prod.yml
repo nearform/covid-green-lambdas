@@ -107,7 +107,7 @@ jobs:
       run: |
         npm i --g aws-cloudwatch-annotations
         aws-cw-annotate prod-cti --title 'Deployment lambda.${{ github.sha }}'
-        
+
   deploy-ni:
     name: Deploy to NI
     runs-on: ubuntu-latest
@@ -209,7 +209,7 @@ jobs:
       run: |
         npm i --g aws-cloudwatch-annotations
         aws-cw-annotate prod-ni --title 'Deployment lambda.${{ github.sha }}'
-        
+
   deploy-gi:
     name: Deploy to GI
     runs-on: ubuntu-latest
@@ -258,6 +258,15 @@ jobs:
         function_name: prod-gct-cleanup
         zip_file: lambdas.zip
 
+    - name: Deploy download
+      uses: appleboy/lambda-action@master
+      with:
+        aws_access_key_id: ${{ secrets.GI_PROD_KEY }}
+        aws_secret_access_key: ${{ secrets.GI_PROD_SECRET }}
+        aws_region: eu-west-2
+        function_name: prod-gct-download
+        zip_file: lambdas.zip
+
     - name: Deploy exposures
       uses: appleboy/lambda-action@master
       with:
@@ -283,6 +292,15 @@ jobs:
         aws_secret_access_key: ${{ secrets.GI_PROD_SECRET }}
         aws_region: eu-west-2
         function_name: prod-gct-token
+        zip_file: lambdas.zip
+
+    - name: Deploy upload
+      uses: appleboy/lambda-action@master
+      with:
+        aws_access_key_id: ${{ secrets.GI_PROD_KEY }}
+        aws_secret_access_key: ${{ secrets.GI_PROD_SECRET }}
+        aws_region: eu-west-2
+        function_name: prod-gct-upload
         zip_file: lambdas.zip
 
     - name: Create deployment annotation in dashboard
@@ -377,7 +395,7 @@ jobs:
       run: |
         npm i --g aws-cloudwatch-annotations
         aws-cw-annotate prod-penn --title 'Deployment lambda.${{ github.sha }}'
-        
+
   deploy-scot:
     name: Deploy to SCOT
     runs-on: ubuntu-latest
@@ -426,6 +444,15 @@ jobs:
         function_name: prod-scot-cleanup
         zip_file: lambdas.zip
 
+    - name: Deploy download
+      uses: appleboy/lambda-action@master
+      with:
+        aws_access_key_id: ${{ secrets.SCOT_PROD_KEY }}
+        aws_secret_access_key: ${{ secrets.SCOT_PROD_SECRET }}
+        aws_region: eu-west-2
+        function_name: prod-scot-download
+        zip_file: lambdas.zip
+
     - name: Deploy exposures
       uses: appleboy/lambda-action@master
       with:
@@ -453,6 +480,15 @@ jobs:
         function_name: prod-scot-token
         zip_file: lambdas.zip
 
+    - name: Deploy upload
+      uses: appleboy/lambda-action@master
+      with:
+        aws_access_key_id: ${{ secrets.SCOT_PROD_KEY }}
+        aws_secret_access_key: ${{ secrets.SCOT_PROD_SECRET }}
+        aws_region: eu-west-2
+        function_name: prod-scot-upload
+        zip_file: lambdas.zip
+
     - name: Create deployment annotation in dashboard
       env:
         AWS_ACCESS_KEY_ID: ${{ secrets.SCOT_PROD_KEY }}
@@ -461,7 +497,7 @@ jobs:
       run: |
         npm i --g aws-cloudwatch-annotations
         aws-cw-annotate prod-scot --title 'Deployment lambda.${{ github.sha }}'
-        
+
   deploy-jers:
     name: Deploy to JERS
     runs-on: ubuntu-latest
@@ -510,6 +546,15 @@ jobs:
         function_name: prod-jers-cleanup
         zip_file: lambdas.zip
 
+    - name: Deploy download
+      uses: appleboy/lambda-action@master
+      with:
+        aws_access_key_id: ${{ secrets.JERS_PROD_KEY }}
+        aws_secret_access_key: ${{ secrets.JERS_PROD_SECRET }}
+        aws_region: eu-west-2
+        function_name: prod-jers-download
+        zip_file: lambdas.zip
+
     - name: Deploy exposures
       uses: appleboy/lambda-action@master
       with:
@@ -537,6 +582,15 @@ jobs:
         function_name: prod-jers-token
         zip_file: lambdas.zip
 
+    - name: Deploy upload
+      uses: appleboy/lambda-action@master
+      with:
+        aws_access_key_id: ${{ secrets.JERS_PROD_KEY }}
+        aws_secret_access_key: ${{ secrets.JERS_PROD_SECRET }}
+        aws_region: eu-west-2
+        function_name: prod-jers-upload
+        zip_file: lambdas.zip
+
     - name: Create deployment annotation in dashboard
       env:
         AWS_ACCESS_KEY_ID: ${{ secrets.JERS_PROD_KEY }}
@@ -545,7 +599,7 @@ jobs:
       run: |
         npm i --g aws-cloudwatch-annotations
         aws-cw-annotate prod-jers --title 'Deployment lambda.${{ github.sha }}'
-        
+
   deploy-dela:
     name: Deploy to DE
     runs-on: ubuntu-latest
@@ -629,7 +683,7 @@ jobs:
       run: |
         npm i --g aws-cloudwatch-annotations
         aws-cw-annotate prod-dela --title 'Deployment lambda.${{ github.sha }}'
-        
+
   deploy-newjers:
     name: Deploy to NJ
     runs-on: ubuntu-latest
