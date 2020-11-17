@@ -289,8 +289,8 @@ module.exports = {
   getExposuresConfig,
   getInteropConfig,
   getJwtSecret,
+  getQrConfig,
   insertMetric,
   isAuthorized,
-  getQrConfig,
   runIfDev
 }
