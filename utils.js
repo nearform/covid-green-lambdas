@@ -25,7 +25,7 @@ async function getOptionalParameter(id, defaultValue) {
       .promise()
 
     return response.Parameter.Value
-  } catch(error) {
+  } catch (error) {
     console.error(`Optional parameter [${id}] error`, error)
     return defaultValue
   }
@@ -250,27 +250,20 @@ function isAuthorized(token, secret) {
 }
 
 async function getQrConfig() {
-  if (!isProduction) {
+  if (isProduction) {
+    const [appUrl, bucket, sender] = await Promise.all([
+      getParameter('qr_generate_url'),
+      getParameter('s3_qr_bucket'),
+      getParameter('qr_sender')
+    ])
+
+    return { appUrl, bucket, sender }
+  } else {
     return {
-      sender: process.env.QR_SENDER,
+      appUrl: process.env.QR_APP_URL,
       bucket: process.env.QR_BUCKET_NAME,
-      appUrl: process.env.QR_APP_URL
+      sender: process.env.QR_SENDER
     }
-  }
-
-  const [
-    bucket,
-    sender,
-    appUrl
-  ] = await Promise.all([
-    getParameter('s3_qr_bucket'),
-    getParameter('qr_sender')
-    getParameter('qr_generate_url')
-  ])
-
-  return {
-    bucket,
-    appUrl
   }
 }
 

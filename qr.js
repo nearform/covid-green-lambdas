@@ -47,18 +47,12 @@ exports.handler = async function(event) {
   const s3 = new AWS.S3({ region: process.env.AWS_REGION })
   const ses = new AWS.SES({ region: process.env.AWS_REGION })
   const transport = createTransport({ SES: ses })
-  const {
-    bucketName,
-    appUrl,
-    sender,
-  } = await getBucketConfig()
+  const { bucketName, appUrl, sender } = await getQrConfig()
 
   console.log(`processing ${event.Records.length} records`)
 
   for (const record of event.Records) {
-    const { emailAddress, id, location, name, token } = JSON.parse(
-      record.body
-    )
+    const { emailAddress, id, location, name, token } = JSON.parse(record.body)
 
     console.log(`generating poster ${id}`)
 
