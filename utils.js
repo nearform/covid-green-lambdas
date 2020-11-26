@@ -3,6 +3,7 @@ const SQL = require('@nearform/sql')
 const fetch = require('node-fetch')
 const jwt = require('jsonwebtoken')
 const pg = require('pg')
+require('pg-range').install(pg)
 
 const isProduction = /^\s*production\s*$/i.test(process.env.NODE_ENV)
 const ssm = new AWS.SSM({ region: process.env.AWS_REGION })
@@ -10,24 +11,19 @@ const secretsManager = new AWS.SecretsManager({
   region: process.env.AWS_REGION
 })
 
-async function getParameter(id) {
-  const response = await ssm
-    .getParameter({ Name: `${process.env.CONFIG_VAR_PREFIX}${id}` })
-    .promise()
-
-  return response.Parameter.Value
-}
-
-async function getOptionalParameter(id, defaultValue) {
+async function getParameter(id, defaultValue) {
   try {
     const response = await ssm
       .getParameter({ Name: `${process.env.CONFIG_VAR_PREFIX}${id}` })
       .promise()
 
     return response.Parameter.Value
-  } catch(error) {
-    console.error(`Optional parameter [${id}] error`, error)
-    return defaultValue
+  } catch (err) {
+    if (defaultValue !== undefined) {
+      return defaultValue
+    }
+
+    throw err
   }
 }
 
@@ -52,7 +48,7 @@ async function getExpiryConfig() {
     const [codeLifetime, tokenLifetime, noticeLifetime] = await Promise.all([
       getParameter('security_code_removal_mins'),
       getParameter('upload_token_lifetime_mins'),
-      getOptionalParameter('self_isolation_notice_lifetime_mins', 20160)
+      getParameter('self_isolation_notice_lifetime_mins', 20160)
     ])
 
     return { codeLifetime, tokenLifetime, noticeLifetime }
@@ -65,74 +61,74 @@ async function getExpiryConfig() {
   }
 }
 
-async function getDatabase() {
-  require('pg-range').install(pg)
+async function getProdDbConfig() {
+  const [
+    { username: user, password },
+    host,
+    port,
+    ssl,
+    database
+  ] = await Promise.all([
+    getSecret('rds-read-write'),
+    getParameter('db_host'),
+    getParameter('db_port'),
+    getParameter('db_ssl'),
+    getParameter('db_database')
+  ])
 
-  let client
-
-  if (isProduction) {
-    const [
-      { username: user, password },
-      host,
-      port,
-      ssl,
-      database
-    ] = await Promise.all([
-      getSecret('rds-read-write'),
-      getParameter('db_host'),
-      getParameter('db_port'),
-      getParameter('db_ssl'),
-      getParameter('db_database')
-    ])
-
-    const options = {
-      host,
-      database,
-      user,
-      password,
-      port: Number(port)
-    }
-
-    if (/true/i.test(ssl)) {
-      const certResponse = await fetch(
-        'https://s3.amazonaws.com/rds-downloads/rds-combined-ca-bundle.pem'
-      )
-      const certBody = await certResponse.text()
-
-      options.ssl = {
-        ca: [certBody],
-        rejectUnauthorized: true
-      }
-    } else {
-      options.ssl = false
-    }
-
-    client = new pg.Client(options)
-  } else {
-    const { user, password, host, port, ssl, database } = {
-      user: process.env.DB_USER,
-      password: process.env.DB_PASSWORD,
-      host: process.env.DB_HOST,
-      port: Number(process.env.DB_PORT),
-      ssl: /true/i.test(process.env.DB_SSL)
-        ? { rejectUnauthorized: false }
-        : false,
-      database: process.env.DB_DATABASE
-    }
-
-    client = new pg.Client({
-      host,
-      database,
-      user,
-      password,
-      port: Number(port),
-      ssl
-    })
+  const options = {
+    host,
+    database,
+    user,
+    password,
+    port: Number(port)
   }
+
+  if (/true/i.test(ssl)) {
+    const certResponse = await fetch(
+      'https://s3.amazonaws.com/rds-downloads/rds-combined-ca-bundle.pem'
+    )
+    const certBody = await certResponse.text()
+
+    options.ssl = {
+      ca: [certBody],
+      rejectUnauthorized: true
+    }
+  } else {
+    options.ssl = false
+  }
+
+  return options
+}
+
+function getDevDbConfig() {
+  return {
+    host: process.env.DB_HOST,
+    database: process.env.DB_DATABASE,
+    user: process.env.DB_USER,
+    password: process.env.DB_PASSWORD,
+    port: Number(process.env.DB_PORT),
+    ssl: /true/i.test(process.env.DB_SSL)
+      ? { rejectUnauthorized: false }
+      : false
+  }
+}
+
+async function getDbConfig() {
+  return isProduction ? getProdDbConfig() : getDevDbConfig()
+}
+
+async function withDatabase(fn) {
+  const options = await getDbConfig()
+  const client = new pg.Client(options)
 
   await client.connect()
 
-  return client
+  try {
+    return await fn(client)
+  } finally {
+    await client.end()
+  }
 }
 
 async function getExposuresConfig() {
@@ -221,10 +217,26 @@ async function getJwtSecret() {
   }
 }
 
+async function getTimeZone() {
+  if (isProduction) {
+    return await getParameter('time_zone', 'UTC')
+  } else {
+    return process.env.TIME_ZONE
+  }
+}
+
 async function insertMetric(client, event, os, version, value = 1) {
+  const timeZone = await getTimeZone()
+
   const query = SQL`
     INSERT INTO metrics (date, event, os, version, value)
-    VALUES (CURRENT_DATE, ${event}, ${os}, ${version}, ${value})
+    VALUES (
+      (CURRENT_TIMESTAMP AT TIME ZONE ${timeZone})::DATE,
+      ${event},
+      ${os},
+      ${version},
+      ${value}
+    )
     ON CONFLICT ON CONSTRAINT metrics_pkey
     DO UPDATE SET value = metrics.value + ${value}`
 
@@ -245,6 +257,24 @@ function isAuthorized(token, secret) {
   }
 }
 
+async function getQrConfig() {
+  if (isProduction) {
+    const [appUrl, bucket, sender] = await Promise.all([
+      getParameter('qr_generate_url'),
+      getParameter('s3_qr_bucket'),
+      getParameter('qr_sender')
+    ])
+
+    return { appUrl, bucket, sender }
+  } else {
+    return {
+      appUrl: process.env.QR_APP_URL,
+      bucket: process.env.QR_BUCKET_NAME,
+      sender: process.env.QR_SENDER
+    }
+  }
+}
+
 function runIfDev(fn) {
   if (!isProduction) {
     fn(JSON.parse(process.argv[2] || '{}'))
@@ -260,12 +290,14 @@ function runIfDev(fn) {
 }
 
 module.exports = {
+  withDatabase,
   getAssetsBucket,
-  getDatabase,
   getExpiryConfig,
   getExposuresConfig,
   getInteropConfig,
   getJwtSecret,
+  getQrConfig,
+  getTimeZone,
   insertMetric,
   isAuthorized,
   runIfDev

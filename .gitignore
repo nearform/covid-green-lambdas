@@ -19,3 +19,4 @@ yarn.lock
 
 lambdas.zip
 out
+pdf-assets/*.pdf
