@@ -21,15 +21,15 @@ async function getAlerts(client, date, thresholdCount, thresholdDuration) {
     WITH
       dates AS (
         SELECT GENERATE_SERIES(
-          ${date} - ${`${thresholdDuration} days`}::INTERVAL,
+          ${date} - ${`${thresholdDuration} hours`}::INTERVAL,
           ${date}::TIMESTAMPTZ,
-          '1 days'::INTERVAL
+          '1 hours'::INTERVAL
         ) AS start_date
       ),
       ranges AS (
         SELECT
           start_date,
-          start_date + ${`${thresholdDuration} days`}::INTERVAL AS end_date
+          start_date + ${`${thresholdDuration} hours`}::INTERVAL AS end_date
         FROM dates
       ),
       results AS (
