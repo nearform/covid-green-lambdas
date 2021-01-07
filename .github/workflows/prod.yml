@@ -6,7 +6,7 @@ on:
       - prod
 
 jobs:
-  deploy-cti:
+#  deploy-cti:
 #    name: Deploy to CTI
 #    runs-on: ubuntu-latest
 #
