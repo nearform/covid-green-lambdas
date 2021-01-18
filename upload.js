@@ -44,7 +44,7 @@ async function getExposures(client, since) {
     FROM exposures
     WHERE id > ${since} AND origin IS NULL
     ORDER BY id ASC
-    LIMIT 1000
+    LIMIT 900
   `
 
   const { rows } = await client.query(query)
