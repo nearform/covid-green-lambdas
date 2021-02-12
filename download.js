@@ -146,13 +146,15 @@ async function downloadFromInterop(
           }
         )
         console.log("Valid keys", data.exposures, validKeys)
-        inserted += await insertExposures(client, validKeys)
+        if (validKeys.length > 0) {
+          inserted += await insertExposures(client, validKeys)
+        }
       }
 
       await insertBatch(client, batchTag, id)
 
       console.log(
-        `added ${data.exposures.length} exposures from batch ${batchTag}`
+        `added ${validKeys.length} exposures from potential ${data.exposures.length} exposures from batch ${batchTag}`
       )
     } else if (response.status === 204) {
       await insertMetric(client, 'INTEROP_KEYS_DOWNLOADED', '', '', inserted)
