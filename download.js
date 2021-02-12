@@ -135,15 +135,15 @@ async function downloadFromInterop(
           }
         }
 
-        // filter keys based on allowed test type criteria and report type        
-        const validKeys = data.exposures.filter(
-          exp => {
-            return (allowedTestTypes.length === 0 ||
+        // filter keys based on allowed test type criteria and report type
+        const validKeys = data.exposures.filter(exp => {
+          return (
+            (allowedTestTypes.length === 0 ||
               allowedTestTypes.indexOf(exp.testType) > -1) &&
             exp.reportType === 1
-          }
-        )
-        if (validKeys.length > 0) {          
+          )
+        })
+        if (validKeys.length > 0) {
           actualKeys = await insertExposures(client, validKeys)
           inserted += actualKeys
         }
