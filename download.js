@@ -123,7 +123,7 @@ async function downloadFromInterop(
 
     if (response.status === 200) {
       const data = await response.json()
-
+      let actualKeys = 0
       batchTag = data.batchTag
 
       if (data.exposures.length > 0) {
@@ -146,15 +146,16 @@ async function downloadFromInterop(
           }
         )
         console.log("Valid keys", data.exposures, validKeys)
-        if (validKeys.length > 0) {
-          inserted += await insertExposures(client, validKeys)
+        if (validKeys.length > 0) {          
+          actualKeys = await insertExposures(client, validKeys)
+          inserted += actualKeys
         }
       }
 
       await insertBatch(client, batchTag, id)
 
       console.log(
-        `added ${validKeys.length} exposures from potential ${data.exposures.length} exposures from batch ${batchTag}`
+        `added ${actualKeys} exposures from potential ${data.exposures.length} exposures from batch ${batchTag}`
       )
     } else if (response.status === 204) {
       await insertMetric(client, 'INTEROP_KEYS_DOWNLOADED', '', '', inserted)
