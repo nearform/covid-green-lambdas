@@ -135,17 +135,14 @@ async function downloadFromInterop(
           }
         }
 
-        // filter keys based on allowed test type criteria and report type
-        
+        // filter keys based on allowed test type criteria and report type        
         const validKeys = data.exposures.filter(
           exp => {
-            console.log("Checking key for match", allowedTestTypes, exp.testType, exp.reportType)
             return (allowedTestTypes.length === 0 ||
               allowedTestTypes.indexOf(exp.testType) > -1) &&
             exp.reportType === 1
           }
         )
-        console.log("Valid keys", data.exposures, validKeys)
         if (validKeys.length > 0) {          
           actualKeys = await insertExposures(client, validKeys)
           inserted += actualKeys
