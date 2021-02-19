@@ -16,7 +16,6 @@ async function getParameter(id, defaultValue) {
     const response = await ssm
       .getParameter({ Name: `${process.env.CONFIG_VAR_PREFIX}${id}` })
       .promise()
-
     return response.Parameter.Value
   } catch (err) {
     if (defaultValue !== undefined) {
@@ -27,12 +26,20 @@ async function getParameter(id, defaultValue) {
   }
 }
 
-async function getSecret(id) {
-  const response = await secretsManager
-    .getSecretValue({ SecretId: `${process.env.CONFIG_VAR_PREFIX}${id}` })
-    .promise()
+async function getSecret(id, defaultValue) {
+  try {
+    const response = await secretsManager
+      .getSecretValue({ SecretId: `${process.env.CONFIG_VAR_PREFIX}${id}` })
+      .promise()
 
-  return JSON.parse(response.SecretString)
+    return JSON.parse(response.SecretString)
+  } catch (err) {
+    if (defaultValue !== undefined) {
+      return defaultValue
+    }
+
+    throw err
+  }
 }
 
 async function getAssetsBucket() {
@@ -186,6 +193,7 @@ async function getInteropConfig() {
     config.allowedTestTypes = JSON.parse(
       await getParameter('allowed_test_types', '[1]')
     )
+
     return config
   } else {
     return {
@@ -246,7 +254,7 @@ async function getENXLogoEnabled() {
 
 async function getAPHLServerDetails() {
   if (isProduction) {
-    const { statsApiKey } = await getSecret('verify-proxy')
+    const { statsApiKey } = await getSecret('verify-proxy', {})
     const server = await getParameter('issue-proxy', '')
     return { server, key: statsApiKey }
   } else {
