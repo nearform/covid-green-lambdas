@@ -246,16 +246,16 @@ async function getTimeZone() {
 
 async function getENXLogoEnabled() {
   if (isProduction) {
-    return await getParameter('enx_logo_supported', false)
+    return /true/i.test(await getParameter('enx_logo_supported', false))
   } else {
-    return process.env.ENX_LOGO_SUPPORTED
+    return /true/i.test(process.env.ENX_LOGO_SUPPORTED)
   }
 }
 
 async function getAPHLServerDetails() {
   if (isProduction) {
     const { statsApiKey } = await getSecret('verify-proxy', {})
-    const server = await getParameter('issue-proxy', '')
+    const server = await getParameter('issue_proxy_url', '')
     return { server, key: statsApiKey }
   } else {
     return {
@@ -300,11 +300,11 @@ function isAuthorized(token, secret) {
 function runIfDev(fn) {
   if (!isProduction) {
     fn(JSON.parse(process.argv[2] || '{}'))
-      .then(result => {
+      .then((result) => {
         console.log(result)
         process.exit(0)
       })
-      .catch(error => {
+      .catch((error) => {
         console.log(error)
         process.exit(1)
       })
