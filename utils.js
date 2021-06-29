@@ -237,7 +237,7 @@ async function getDGCConfig() {
     return {
       dgc: {
         url: process.env.DGC_URL,
-        enableDCC: process.env.ENABLE_DCC,
+        enableDCC: /true/i.test(process.env.ENABLE_DCC),
         auth: {
           cert: process.env.DGC_AUTH_CERT,
           key: process.env.DGC_AUTH_KEY
