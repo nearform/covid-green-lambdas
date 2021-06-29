@@ -69,7 +69,7 @@ jobs:
         aws_access_key_id: ${{ secrets.CTI_QA_KEY }}
         aws_secret_access_key: ${{ secrets.CTI_QA_SECRET }}
         aws_region: eu-west-1
-        function_name: qa-fight-together-dccconfig
+        function_name: qa-fight-together-dcc-config
         zip_file: lambdas.zip
 
     - name: Deploy exposures
