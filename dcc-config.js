@@ -95,8 +95,8 @@ async function downloadFromDGC(config) {
 exports.handler = async function (event) {
   const { dgc } = await getDGCConfig()
 
-  if (!dgc.enableDCC) {
-    return 'Building DCC Config is not enabled'
+  if (!dgc || !dgc.enableDCC) {
+    return 'Building DCC Config is not enabled or config not defined correctly'
   }
 
   const s3 = new AWS.S3({ region: process.env.AWS_REGION })

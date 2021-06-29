@@ -211,17 +211,6 @@ async function getInteropConfig() {
           key: process.env.EFGS_SIGN_KEY
         }
       },
-      dgc: {
-        url: process.env.DGC_URL,
-        auth: {
-          cert: process.env.DGC_AUTH_CERT,
-          key: process.env.DGC_AUTH_KEY
-        },
-        sign: {
-          cert: process.env.DGC_SIGN_CERT,
-          key: process.env.DGC_SIGN_KEY
-        }
-      },
       servers: [
         {
           id: process.env.INTEROP_SERVER_ID,
@@ -241,7 +230,7 @@ async function getInteropConfig() {
 async function getDGCConfig() {
   if (isProduction) {
     const config = await getSecret('interop')
-    config.enableDCC = await getParameter('enable_dcc', false)
+    config.dgc.enableDCC = await getParameter('enable_dcc', false)
 
     return config
   } else {
