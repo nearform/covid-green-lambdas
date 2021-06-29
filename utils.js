@@ -241,14 +241,14 @@ async function getInteropConfig() {
 async function getDGCConfig() {
   if (isProduction) {
     const config = await getSecret('interop')
-    config.buildDCCConfig = await getParameter('build_dcc_config', false)
+    config.enableDCC = await getParameter('enable_dcc', false)
 
     return config
   } else {
     return {
       dgc: {
         url: process.env.DGC_URL,
-        buildDCCConfig: process.env.BUILD_DCC_CONFIG,
+        enableDCC: process.env.ENABLE_DCC,
         auth: {
           cert: process.env.DGC_AUTH_CERT,
           key: process.env.DGC_AUTH_KEY
