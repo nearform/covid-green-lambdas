@@ -98,6 +98,7 @@ exports.handler = async function (event) {
   if (!dgc || !dgc.enableDCC) {
     return 'Building DCC Config is not enabled or config not defined correctly'
   }
+  console.log(dgc)
 
   const s3 = new AWS.S3({ region: process.env.AWS_REGION })
   const bucket = await getAssetsBucket()
