@@ -95,7 +95,7 @@ async function downloadFromDGC(config) {
 exports.handler = async function (event) {
   const { dgc } = await getDGCConfig()
 
-  if (!dgc.buildDCCConfig) {
+  if (!dgc.enableDCC) {
     return 'Building DCC Config is not enabled'
   }
 
