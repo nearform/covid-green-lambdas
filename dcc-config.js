@@ -29,28 +29,30 @@ async function getTrustedCerts(config) {
       headers,
       httpsAgent
     })
+    const certData = {}
 
     if (result.data) {
-      return result.data
-        .map((i) => {
-          try {
-            const cert = Certificate.fromPEM(
-              `-----BEGIN CERTIFICATE-----\n${i.rawData}\n-----END CERTIFICATE-----`
-            )
+      result.data.forEach((i) => {
+        try {
+          const cert = Certificate.fromPEM(
+            `-----BEGIN CERTIFICATE-----\n${i.rawData}\n-----END CERTIFICATE-----`
+          )
 
-            const ec = new ECKey(cert.publicKeyRaw, 'spki')
-            return {
-              kid: i.kid,
-              country: i.country,
-              x: ec.x.toString('base64'),
-              y: ec.y.toString('base64')
-            }
-          } catch (e) {
-            console.log(i.country, i.thumbprint)
-            return null
+          const ec = new ECKey(cert.publicKeyRaw, 'spki')
+          if (!certData[i.country]) {
+            certData[i.country] = []
           }
-        })
-        .filter((i) => i !== null)
+          certData[i.country].push({
+            kid: i.kid,
+            country: i.country,
+            x: ec.x.toString('base64'),
+            y: ec.y.toString('base64')
+          })
+        } catch (e) {
+          console.log(i.country, i.thumbprint)
+        }
+      })
+      return certData
     } else {
       throw new Error('No trustList data available')
     }

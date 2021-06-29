@@ -187,7 +187,6 @@ async function getInteropConfig() {
   if (isProduction) {
     const config = await getSecret('interop')
     config.origin = await getParameter('interop_origin', 'IE')
-    config.origin = await getParameter('interop_origin', 'IE')
     config.varianceOffsetMins = Number(
       await getParameter('variance_offset_mins', 120)
     )
