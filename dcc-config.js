@@ -8,11 +8,7 @@ const locations = require('./dcc/locations.json')
 const rules = require('./dcc/rules.json')
 const AWS = require('aws-sdk')
 
-const {
-  getDGCConfig,
-  runIfDev,
-  getAssetsBucket
-} = require('./utils')
+const { getDGCConfig, runIfDev, getAssetsBucket } = require('./utils')
 
 async function getTrustedCerts(config) {
   const { auth, url } = config
@@ -29,35 +25,36 @@ async function getTrustedCerts(config) {
   }
 
   try {
-    const result = await axios.get(
-      `${url}/trustList/DSC`,
-      {
-        headers,
-        httpsAgent
-      }
-    )
+    const result = await axios.get(`${url}/trustList/DSC`, {
+      headers,
+      httpsAgent
+    })
 
     if (result.data) {
-      return result.data.map(i => {
-        try {
-          const cert = Certificate.fromPEM(`-----BEGIN CERTIFICATE-----\n${i.rawData}\n-----END CERTIFICATE-----`)
+      return result.data
+        .map((i) => {
+          try {
+            const cert = Certificate.fromPEM(
+              `-----BEGIN CERTIFICATE-----\n${i.rawData}\n-----END CERTIFICATE-----`
+            )
 
-          const ec = new ECKey(cert.publicKeyRaw, 'spki')
-          return {
-            kid: i.kid,
-            country: i.country,
-            x: ec.x.toString('base64'),
-            y: ec.y.toString('base64')
+            const ec = new ECKey(cert.publicKeyRaw, 'spki')
+            return {
+              kid: i.kid,
+              country: i.country,
+              x: ec.x.toString('base64'),
+              y: ec.y.toString('base64')
+            }
+          } catch (e) {
+            console.log(i.country, i.thumbprint)
+            return null
           }
-        } catch (e) {
-          console.log(i.country, i.thumbprint)
-          return null
-        }
-      }).filter(i => i !== null)
+        })
+        .filter((i) => i !== null)
     } else {
       throw new Error('No trustList data available')
     }
-  } catch(e) {
+  } catch (e) {
     console.log(e)
     throw e
   }
@@ -80,7 +77,6 @@ function getValueSetsComputed() {
 }
 
 async function downloadFromDGC(config) {
-
   const certs = await getTrustedCerts(config)
   const valueSets = getValueSets()
   const valuesetsComputed = getValueSetsComputed()
@@ -94,14 +90,13 @@ async function downloadFromDGC(config) {
     rules,
     locations
   }
-
 }
 
 exports.handler = async function (event) {
   const { dgc } = await getDGCConfig()
 
   if (!dgc.buildDCCConfig) {
-    return "Building DCC Config is not enabled"
+    return 'Building DCC Config is not enabled'
   }
 
   const s3 = new AWS.S3({ region: process.env.AWS_REGION })
