@@ -32,7 +32,7 @@
     "ec-key": "^0.0.4",
     "flat": "^5.0.2",
     "jsonwebtoken": "^8.5.1",
-    "jsrsasign": "^9.1.9",
+    "jsrsasign": "^10.2.0",
     "node-fetch": "^2.6.1",
     "node-jose": "^2.0.0",
     "pg": "^8.6.0",
