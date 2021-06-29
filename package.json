@@ -25,7 +25,7 @@
     "@fidm/x509": "^1.2.1",
     "@nearform/sql": "^1.5.1",
     "archiver": "^5.2.0",
-    "aws-sdk": "^2.890.0",
+    "aws-sdk": "^2.936.0",
     "axios": "^0.21.1",
     "date-fns": "^2.21.1",
     "date-fns-tz": "^1.1.4",
