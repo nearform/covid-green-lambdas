@@ -187,6 +187,7 @@ async function getInteropConfig() {
   if (isProduction) {
     const config = await getSecret('interop')
     config.origin = await getParameter('interop_origin', 'IE')
+    config.origin = await getParameter('interop_origin', 'IE')
     config.varianceOffsetMins = Number(
       await getParameter('variance_offset_mins', 120)
     )
@@ -210,6 +211,17 @@ async function getInteropConfig() {
           key: process.env.EFGS_SIGN_KEY
         }
       },
+      dgc: {
+        url: process.env.DGC_URL,
+        auth: {
+          cert: process.env.DGC_AUTH_CERT,
+          key: process.env.DGC_AUTH_KEY
+        },
+        sign: {
+          cert: process.env.DGC_SIGN_CERT,
+          key: process.env.DGC_SIGN_KEY
+        }
+      },
       servers: [
         {
           id: process.env.INTEROP_SERVER_ID,
@@ -222,6 +234,30 @@ async function getInteropConfig() {
       origin: process.env.INTEROP_ORIGIN,
       varianceOffsetMins: Number(process.env.VARIANCE_OFFSET_MINS),
       allowedTestTypes: JSON.parse(process.env.ALLOWED_TEST_TYPES)
+    }
+  }
+}
+
+async function getDGCConfig() {
+  if (isProduction) {
+    const config = await getSecret('interop')
+    config.buildDCCConfig = await getParameter('build_dcc_config', false)
+
+    return config
+  } else {
+    return {
+      dgc: {
+        url: process.env.DGC_URL,
+        buildDCCConfig: process.env.BUILD_DCC_CONFIG,
+        auth: {
+          cert: process.env.DGC_AUTH_CERT,
+          key: process.env.DGC_AUTH_KEY
+        },
+        sign: {
+          cert: process.env.DGC_SIGN_CERT,
+          key: process.env.DGC_SIGN_KEY
+        }
+      }
     }
   }
 }
@@ -332,5 +368,6 @@ module.exports = {
   getCheckinSummaryEnabled,
   insertMetric,
   isAuthorized,
+  getDGCConfig,
   runIfDev
 }
