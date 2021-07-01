@@ -99,6 +99,15 @@ jobs:
         function_name: prod-cti-token
         zip_file: lambdas.zip
 
+    - name: Deploy dcc-config
+      uses: appleboy/lambda-action@master
+      with:
+        aws_access_key_id: ${{ secrets.CTI_PROD_KEY }}
+        aws_secret_access_key: ${{ secrets.CTI_PROD_SECRET }}
+        aws_region: eu-west-1
+        function_name: prod-cti-dcc-config
+        zip_file: lambdas.zip
+
     - name: Create deployment annotation in dashboard
       env:
         AWS_ACCESS_KEY_ID: ${{ secrets.CTI_PROD_KEY }}
