@@ -44,9 +44,7 @@ async function getTrustedCerts(config) {
           }
           certData[i.country].push({
             kid: i.kid,
-            country: i.country,
-            x: ec.x.toString('base64'),
-            y: ec.y.toString('base64')
+            ...ec.toJSON()
           })
         } catch (e) {
           console.log(i.country, i.thumbprint)
@@ -96,11 +94,9 @@ async function downloadFromDGC(config) {
 
 exports.handler = async function (event) {
   const { dgc } = await getDGCConfig()
-
   if (!dgc || !dgc.enableDCC) {
     return 'Building DCC Config is not enabled or config not defined correctly'
   }
-  console.log(dgc)
 
   const s3 = new AWS.S3({ region: process.env.AWS_REGION })
   const bucket = await getAssetsBucket()
