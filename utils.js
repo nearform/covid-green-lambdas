@@ -226,6 +226,30 @@ async function getInteropConfig() {
   }
 }
 
+async function getDGCConfig() {
+  if (isProduction) {
+    const config = await getSecret('interop')
+    config.dgc.enableDCC = await getParameter('enable_dcc', false)
+
+    return config
+  } else {
+    return {
+      dgc: {
+        url: process.env.DGC_URL,
+        enableDCC: /true/i.test(process.env.ENABLE_DCC),
+        auth: {
+          cert: process.env.DGC_AUTH_CERT,
+          key: process.env.DGC_AUTH_KEY
+        },
+        sign: {
+          cert: process.env.DGC_SIGN_CERT,
+          key: process.env.DGC_SIGN_KEY
+        }
+      }
+    }
+  }
+}
+
 async function getJwtSecret() {
   if (isProduction) {
     const { key } = await getSecret('jwt')
@@ -332,5 +356,6 @@ module.exports = {
   getCheckinSummaryEnabled,
   insertMetric,
   isAuthorized,
+  getDGCConfig,
   runIfDev
 }
