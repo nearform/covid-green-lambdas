@@ -1,5 +1,12 @@
 [
-  {"id": 1, "name": "Dublin Airport"},
-  {"id": 2, "name": "Dublin Port"},
-  {"id": 3, "name": "Cork Airport"}
+  {"id": 1, "name": "Cork Airport"},
+  {"id": 2, "name": "Cork Seaport"},
+  {"id": 3, "name": "Donegal Carrickfinn Airport"},
+  {"id": 4, "name": "Dublin Airport"},
+  {"id": 5, "name": "Dublin Port"},
+  {"id": 6, "name": "Immigration Bureau(s)"},
+  {"id": 7, "name": "Kerry Farranfore Airport"},
+  {"id": 8, "name": "Knock / Connaught Airport"},
+  {"id": 9, "name": "Rosslare Europort"},
+  {"id": 10, "name": "Shannon Airport"}
 ]
